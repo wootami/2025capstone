@@ -11,7 +11,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'wooram branch',
+      title: '데스트용 메인 화면',
       theme: ThemeData(
         // This is the theme of your application.
         //
@@ -104,7 +104,7 @@ class _MyHomePageState extends State<MyHomePage> {
           // wireframe for each widget.
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            const Text('You have pushed the button this many times:'),
+            const Text('버튼 누른 횟수:'),
             Text(
               '$_counter',
               style: Theme.of(context).textTheme.headlineMedium,
