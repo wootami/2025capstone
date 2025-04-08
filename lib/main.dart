@@ -6,7 +6,7 @@ import 'location/location_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized(); // Flutter 엔진 초기화
-  await initializeDateFormatting('ko_KR', null); // 한글 로케일 데이터 초기화
+  await initializeDateFormatting('ko_KR'); // 한글 로케일 데이터 초기화
   runApp(MyApp());
 }
 
