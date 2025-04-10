@@ -8,176 +8,91 @@ class CalendarPage extends StatefulWidget {
 }
 
 class _CalendarPageState extends State<CalendarPage> {
+  CalendarFormat _calendarFormat = CalendarFormat.month;
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
-  String _weatherInfo = '날짜를 선택하면 날씨를 보여줄게요 ☁️';
-  String _currentTemp = '기온 정보를 불러오는 중...';
-  CalendarFormat _calendarFormat = CalendarFormat.month;
   final WeatherPage _weatherPage = WeatherPage();
-  final PageController _pageController = PageController();
+  String _currentTemperature = '로딩 중...';
+  String _weatherInfo = '';
 
   @override
   void initState() {
     super.initState();
-    _loadCurrentTemperature();
+    _selectedDay = _focusedDay;
+    _loadWeatherData();
   }
 
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _loadCurrentTemperature() async {
-    String temp = await _weatherPage.getCurrentTemperature();
+  Future<void> _loadWeatherData() async {
+    final temperature = await _weatherPage.getCurrentTemperature();
     setState(() {
-      _currentTemp = temp;
+      _currentTemperature = temperature;
     });
   }
 
-  void _onDaySelected(DateTime selectedDay, DateTime focusedDay) async {
+  Future<void> _loadWeatherInfo(DateTime date) async {
+    final weatherInfo = await _weatherPage.fetchShortTermWeather(date);
     setState(() {
-      _selectedDay = selectedDay;
-      _focusedDay = focusedDay;
-      _weatherInfo = '날씨 정보를 불러오는 중이에요...';
+      _weatherInfo = weatherInfo;
     });
-
-    String info = await _weatherPage.fetchShortTermWeather(selectedDay);
-    setState(() {
-      _weatherInfo = info;
-    });
-  }
-
-  Widget _buildWeatherPage(String title, String content) {
-    return Container(
-      margin: const EdgeInsets.all(16.0),
-      padding: const EdgeInsets.all(16.0),
-      decoration: BoxDecoration(
-        color: Colors.blue[50],
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.3),
-            spreadRadius: 1,
-            blurRadius: 5,
-            offset: Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.blue[300],
-            ),
-          ),
-          SizedBox(height: 20),
-          Text(
-            content,
-            style: TextStyle(
-              fontSize: 18,
-              color: Colors.black87,
-              height: 1.5,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('날씨 캘린더'),
+        title: Text('캘린더'),
         backgroundColor: Colors.blue[300],
         elevation: 0,
       ),
       body: Column(
         children: [
+          Container(
+            padding: EdgeInsets.all(16.0),
+            color: Colors.blue[50],
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '현재 기온: $_currentTemperature',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
           TableCalendar(
-            locale: 'ko_KR',
-            firstDay: DateTime(2020),
-            lastDay: DateTime(2030),
+            firstDay: DateTime.utc(2020, 1, 1),
+            lastDay: DateTime.utc(2030, 12, 31),
             focusedDay: _focusedDay,
             calendarFormat: _calendarFormat,
-            selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-            onDaySelected: _onDaySelected,
+            selectedDayPredicate: (day) {
+              return isSameDay(_selectedDay, day);
+            },
+            onDaySelected: (selectedDay, focusedDay) {
+              setState(() {
+                _selectedDay = selectedDay;
+                _focusedDay = focusedDay;
+              });
+              _loadWeatherInfo(selectedDay);
+            },
             onFormatChanged: (format) {
               setState(() {
                 _calendarFormat = format;
               });
             },
-            calendarStyle: CalendarStyle(
-              selectedDecoration: BoxDecoration(
-                color: Colors.blue[300],
-                shape: BoxShape.circle,
-              ),
-              todayDecoration: BoxDecoration(
-                color: Colors.blue[100],
-                shape: BoxShape.circle,
-              ),
-              weekendTextStyle: TextStyle(color: Colors.red),
-              holidayTextStyle: TextStyle(color: Colors.red),
-            ),
-            headerStyle: HeaderStyle(
-              formatButtonVisible: true,
-              titleCentered: true,
-              formatButtonDecoration: BoxDecoration(
-                color: Colors.blue[300],
-                borderRadius: BorderRadius.circular(12),
-              ),
-              formatButtonTextStyle: TextStyle(color: Colors.white),
-              titleTextStyle: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
-            ),
+            onPageChanged: (focusedDay) {
+              _focusedDay = focusedDay;
+            },
           ),
           Expanded(
             child: Container(
-              margin: const EdgeInsets.all(16.0),
-              padding: const EdgeInsets.all(16.0),
-              decoration: BoxDecoration(
-                color: Colors.blue[50],
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.3),
-                    spreadRadius: 1,
-                    blurRadius: 5,
-                    offset: Offset(0, 3),
-                  ),
-                ],
-              ),
+              padding: EdgeInsets.all(16.0),
               child: SingleChildScrollView(
-                child: Column(
-                  children: [
-                    Text(
-                      _currentTemp,
-                      style: TextStyle(
-                        fontSize: 48,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.blue[300],
-                      ),
-                    ),
-                    SizedBox(height: 12),
-                    Text(
-                      _weatherInfo,
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: Colors.black87,
-                        height: 1.5,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
+                child: Text(
+                  _weatherInfo.isEmpty ? '날짜를 선택하면 날씨 정보가 표시됩니다.' : _weatherInfo,
+                  style: TextStyle(fontSize: 16),
                 ),
               ),
             ),
